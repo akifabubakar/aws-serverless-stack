@@ -83,7 +83,7 @@ The repository is organized as follows:
 
 ### Variables
 
-You can customize the deployment by modifying the `config/<env>/backend.conf` file or by providing custom values through the command line or environment variables. Key variables include:
+You can customize the deployment by modifying the `config/<env>/env.tfvars` file or by providing custom values through the command line or environment variables. Key variables include:
 
 - `region`: AWS region to deploy the resources.
 - `project`: Your project name.
