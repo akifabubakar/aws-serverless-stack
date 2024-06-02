@@ -1,0 +1,113 @@
+name: CICD for AWS Resources with terraform
+
+on:
+  push:
+    branches:
+      - release/prod
+      - release/develop
+
+env:
+  AWS_REGION         : "ap-southeast-1"
+
+jobs:
+  # -------------------------- #
+  # Entry                      #
+  # -------------------------- #
+
+  branch_check:
+    name: Branch Check
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
+    outputs:
+      branch: ${{ steps.get_branch.outputs.branch }}
+    steps:
+      - name: Get current branch
+        id: get_branch
+        run: |
+          raw="${{ github.event.base_ref }}"
+          branch="${raw#refs/heads/}"
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+          echo "Branch is $branch."
+
+  # -------------------------- #
+  # Development                #
+  # -------------------------- #
+           
+  deployment_dev:
+    name: deployment dev
+    needs: [branch_check]
+    if: ${{ needs.branch_check.outputs.branch == 'release/develop' }} # only run if branch is release/develop
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region            : ${{ env.AWS_REGION }}
+          aws-access-key-id     : ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key : ${{ secrets.SECRET_KEY }}
+
+      - name: init terraform
+        shell: bash
+        run: |
+          terraform init -reconfigure -backend-config=config/dev/backend.conf -input=false
+    
+      - name: validate terraform
+        shell: bash
+        run: |
+          terraform validate -input=false
+
+      - name: deploy infra
+        shell: bash
+        run: |
+          echo "Deployment"
+          terraform apply -var-file=./config/dev/env.tfvars -input=false -auto-approve
+
+  # -------------------------- #
+  # Production                 #
+  # -------------------------- #
+
+  deployment_prod:
+    name: deployment prod
+    needs: [branch_check]
+    if: ${{ needs.branch_check.outputs.branch == 'release/prod' }} # only run if branch is release/prod
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region            : ${{ env.AWS_REGION }}
+          aws-access-key-id     : ${{ secrets.ACCESS_KEY }}
+          aws-secret-access-key : ${{ secrets.SECRET_KEY }}
+
+      - name: init terraform
+        shell: bash
+        run: |
+          terraform init -reconfigure -backend-config=config/prod/backend.conf -input=false
+    
+      - name: validate terraform
+        shell: bash
+        run: |
+          terraform validate -input=false
+
+      - name: deploy infra
+        shell: bash
+        run: |
+          echo "Deployment"
+          terraform apply -var-file=./config/prod/env.tfvars -input=false -auto-approve
