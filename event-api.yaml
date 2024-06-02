@@ -1,0 +1,27 @@
+openapi: 3.0.1
+info:
+  title: ${title}
+paths:
+  /v1/event-receipt:
+    get:
+      x-amazon-apigateway-integration:
+        $ref: "#/components/x-amazon-apigateway-integrations/getevent"
+      responses: {}
+    post:
+      x-amazon-apigateway-integration:
+        $ref: "#/components/x-amazon-apigateway-integrations/postevent"
+      responses: {}
+components:
+  x-amazon-apigateway-integrations:
+    getevent:
+      httpMethod: POST
+      type: aws_proxy
+      uri: !Sub >-
+        arn:${aws_partition}:apigateway:${aws_region}:lambda:path/2015-03-31/functions/${get_event_lambda_arn}/invocations
+      payloadFormatVersion: '2.0'
+    postevent:
+      httpMethod: POST
+      type: aws_proxy
+      uri: !Sub >-
+        arn:${aws_partition}:apigateway:${aws_region}:lambda:path/2015-03-31/functions/${post_event_lambda_arn}/invocations
+      payloadFormatVersion: '2.0'
