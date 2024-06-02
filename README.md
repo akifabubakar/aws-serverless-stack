@@ -67,11 +67,8 @@ The repository is organized as follows:
     cd aws-serverless-stack
     ```
 
-2. **Initialize Terraform:**
+2. **Initialize AWS PROFILE. Make sure you can access to your AWS Account through the terminal / cli,**
 
-    ```sh
-    terraform init
-    ```
 
 3. **Deploy dev:**
 
